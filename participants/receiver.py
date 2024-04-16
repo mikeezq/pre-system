@@ -35,22 +35,16 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
                 sender_id = data.get('sender_id')
                 encrypted_message_hex_str = data.get('encrypted_message_hex_str')
-                rekey_hex_str = data.get('rekey_hex_str')
-                encrypted_message, rekey, _, _ = convert_hex_str_to_object(
+                encrypted_message, _, _, _ = convert_hex_str_to_object(
                     group,
                     message_hex_str=encrypted_message_hex_str,
-                    rekey_hex_str=rekey_hex_str
                 )
 
                 logging.info(f"PARAMS: {params}")
                 logging.info(f"MESSAGE: {encrypted_message}")
-                logging.info(f"REKEY: {rekey}")
-
-                # TODO: move this logic to proxy
-                ciphertext2 = pre.reEncrypt(params, "client-a", rekey, encrypted_message)
 
                 # TODO: add correct id params
-                decrypted_message = pre.decryptSecondLevel(params, id_secret_key, "client-a", ID, ciphertext2)
+                decrypted_message = pre.decryptSecondLevel(params, id_secret_key, "client-a", ID, encrypted_message)
                 logging.info("Decrypted message: %s, from client: %s", decrypted_message, sender_id)
 
                 self.send_response(200)

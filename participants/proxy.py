@@ -2,12 +2,13 @@ import requests
 import socket
 import argparse
 import logging
+import json
 
-
-from util import receive_large_message
-
+from constants import CA_URL
+from util import receive_large_message, convert_hex_str_to_object, setup_pre, get_key_params, convert_object_to_hex_str
 
 logging.basicConfig(level=logging.INFO)
+pre, group = setup_pre()
 
 
 def main(args):
@@ -17,6 +18,7 @@ def main(args):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((server_host, server_port))
     server_socket.listen(5)
+    _, params = get_key_params(CA_URL, "", group) # TODO: check it
 
     print(f"Server listen {server_host}:{server_port}")
 
@@ -28,8 +30,31 @@ def main(args):
         #     break
         print(f"Got encrypted message from client: {message_data}")  # TODO change to sender id
 
+        data = json.loads(message_data)
+        rekey_hex_str = data.get('rekey_hex_str')
+        sender_id = data.get('sender_id')
+        encrypted_message_hex_str = data.get('encrypted_message_hex_str')
+        encrypted_message, rekey, _, _ = convert_hex_str_to_object(
+            group,
+            message_hex_str=encrypted_message_hex_str,
+            rekey_hex_str=rekey_hex_str
+        )
+
+        logging.info(f"REKEY_HEX: {rekey_hex_str}")
+
+        encrypted_message = pre.reEncrypt(params, sender_id, rekey, encrypted_message)
+        encrypted_message_hex_str, _, _, _ = convert_object_to_hex_str(
+            group,
+            message=encrypted_message
+        )
+
+        logging.info(f"REENCRYPTED_MESSAGE {encrypted_message_hex_str}")
+
+        data['encrypted_message_hex_str'] = encrypted_message_hex_str
+        data = json.dumps(data)
+
         url = args.client_url
-        response = requests.post(url, data=message_data)  # TODO: verify=args.client_cert
+        response = requests.post(url, data=data.encode('utf-8'))  # TODO: verify=args.client_cert
 
         client_socket.send(response.text.encode('utf-8'))
         client_socket.close()
@@ -48,12 +73,3 @@ def parse_args():
 if __name__ == "__main__":
     args = parse_args()
     main(args)
-
-
-
-
-
-
-
-
-
