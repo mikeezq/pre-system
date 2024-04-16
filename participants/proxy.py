@@ -4,6 +4,12 @@ import argparse
 import logging
 
 
+from util import receive_large_message
+
+
+logging.basicConfig(level=logging.INFO)
+
+
 def main(args):
     server_host = '0.0.0.0'
     server_port = 1024
@@ -17,13 +23,13 @@ def main(args):
     while True:
         client_socket, client_address = server_socket.accept()
 
-        data = client_socket.recv(1024)
+        message_data = receive_large_message(client_socket)
         # if not data:
         #     break
-        print(f"Get encrypted message from client: {data.decode('utf-8')}")
+        print(f"Got encrypted message from client: {message_data}")  # TODO change to sender id
 
         url = args.client_url
-        response = requests.post(url, data=data.decode('utf-8'))  # TODO: verify=args.client_cert
+        response = requests.post(url, data=message_data)  # TODO: verify=args.client_cert
 
         client_socket.send(response.text.encode('utf-8'))
         client_socket.close()
@@ -31,7 +37,8 @@ def main(args):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--client-url", type=str, default="http://127.0.0.1:1025/secure") # TODO: change to client-b.test-zone.ru
+    # TODO: change to client-b.test-zone.ru
+    parser.add_argument("--client-url", type=str, default="http://127.0.0.1:1028/secure")
     parser.add_argument("--client-cert", type=str, metavar="PATH",
                         default="/usr/local/share/ca-certificates/client-b.crt")
 
@@ -39,7 +46,6 @@ def parse_args():
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     args = parse_args()
     main(args)
 

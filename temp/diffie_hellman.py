@@ -11,7 +11,7 @@ import logging
 from smart_contract import contract, CONTRACT_ADDRESS
 
 
-PRIVATE_KEY_PATH = "/Users/korn-m/Documents/diplom/"  # "/etc/client/keys/private_key.pem" TODO: change to correct path
+PRIVATE_KEY_PATH = "//"  # "/etc/client/keys/private_key.pem" TODO: change to correct path
 
 
 class ProxyReencryption:
@@ -31,7 +31,7 @@ class ProxyReencryption:
                 encryption_algorithm=serialization.NoEncryption()
             )
 
-            with open(os.path.join(PRIVATE_KEY_PATH, client_name), 'w') as key_file:
+            with open(os.path.join(PRIVATE_KEY_PATH, "../participants", client_name), 'w') as key_file:
                 key_file.write(pem.decode('utf-8'))
 
             self.public_key = self.diffieHellman.public_key()
@@ -40,14 +40,14 @@ class ProxyReencryption:
         self.IV = token_bytes(16)
 
     def check_private_key_path(self):
-        last_modified_time = os.path.getmtime(os.path.join(PRIVATE_KEY_PATH, self.client_name))
+        last_modified_time = os.path.getmtime(os.path.join(PRIVATE_KEY_PATH, "../participants", self.client_name))
         last_modified_date = datetime.fromtimestamp(last_modified_time)
         now = datetime.now()
         time_difference = now - last_modified_date
 
         # refresh private key every 2 days
         if time_difference < timedelta(days=2):
-            with open(os.path.join(PRIVATE_KEY_PATH, self.client_name), 'rb') as key_file:  # TODO key change path in all PRIVATE_KEY_PATH
+            with open(os.path.join(PRIVATE_KEY_PATH, "../participants", self.client_name), 'rb') as key_file:  # TODO key change path in all PRIVATE_KEY_PATH
                 try:
                     private_key = serialization.load_pem_private_key(
                         key_file.read(),
@@ -63,7 +63,7 @@ class ProxyReencryption:
                         print("Loaded key is not ECDSA")
                 except ValueError as e:
                     print(f"Failed to load private key {e}")
-                    os.remove(os.path.join(PRIVATE_KEY_PATH, self.client_name))
+                    os.remove(os.path.join(PRIVATE_KEY_PATH, "../participants", self.client_name))
 
     def get_derived_key(self, public_key):
         shared_key = self.diffieHellman.exchange(ec.ECDH(), public_key)
