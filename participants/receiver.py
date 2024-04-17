@@ -2,7 +2,7 @@ import http.server
 import json
 import logging
 
-from util import get_key_params, setup_pre, convert_hex_str_to_object, receive_large_message
+from util import get_key_params, setup_pre, convert_hex_str_to_object
 from constants import CA_URL
 
 

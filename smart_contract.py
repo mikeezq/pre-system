@@ -1,25 +1,7 @@
 from web3 import Web3
-from cryptography.hazmat.primitives.asymmetric.ec import EllipticCurvePublicKey
-from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.backends import default_backend
 import logging
 
-CONTRACT_ADDRESS = "0x7Dc0fa574F7cb11FE3E86CcD1e39AC4b7e17d658" # TODO DELETE
-
-
-def convert_to_string(pub_key: EllipticCurvePublicKey) -> str:
-    pub_key = pub_key.public_bytes(
-        encoding=serialization.Encoding.PEM,
-        format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )
-
-    return pub_key.decode('utf-8')
-
-
-def convert_to_ec(pub_key: str):
-    public_key = serialization.load_pem_public_key(pub_key.encode('utf-8'), backend=default_backend())
-
-    return public_key
+from constants import CONTRACT_ADDRESS, SENDER_ADDRESS
 
 
 class SmartContract:
@@ -31,9 +13,9 @@ class SmartContract:
         {
             'inputs': [
                 {'internalType': 'string', 'name': 'clientName', 'type': 'string'},
-                {'internalType': 'string', 'name': 'pubKey', 'type': 'string'}
+                {'internalType': 'string', 'name': 'reKey', 'type': 'string'}
             ],
-            'name': 'addPublicKey',
+            'name': 'addReKey',
             'outputs': [],
             'stateMutability': 'nonpayable',
             'type': 'function'
@@ -42,7 +24,7 @@ class SmartContract:
             'inputs': [
                 {'internalType': 'string', 'name': 'clientName', 'type': 'string'}
             ],
-            'name': 'getPublicKey',
+            'name': 'getReKey',
             'outputs': [{'internalType': 'string', 'name': '', 'type': 'string'}],
             'stateMutability': 'view',
             'type': 'function'
@@ -63,24 +45,20 @@ class SmartContract:
         contract_address = CONTRACT_ADDRESS  # TODO get from args
         self.contract = self.web3.eth.contract(address=contract_address, abi=SmartContract.abi)
 
-    def addPublicKey(self, sender_address, clientName, pubKey):
-        sender_address = '0x3eB4d8dF7D9B9E3Df03A294467df0666429FbEA7'
-
-        pubKey = convert_to_string(pubKey)
-
-        logging.info("Add public key for %s", clientName)
-        tx_hash = self.contract.functions.addPublicKey(clientName, pubKey).transact({
-            'from': sender_address,
+    def addReKey(self, clientName, reKey):
+        logging.info("Add rekey for %s", clientName)
+        tx_hash = self.contract.functions.addReKey(clientName, reKey).transact({
+            'from': SENDER_ADDRESS,
             'gas': 2000000,
         })
 
-        tx_receipt = self.web3.eth.wait_for_transaction_receipt(tx_hash)
+        self.web3.eth.wait_for_transaction_receipt(tx_hash)
 
-    def getPublicKey(self, clientName):
-        logging.info("Get public key for client: %s", clientName)
-        pub_key = self.contract.functions.getPublicKey(clientName).call()
+    def getReKey(self, clientName):
+        logging.info("Get rekey for client: %s", clientName)
+        rekey_str = self.contract.functions.getReKey(clientName).call()
 
-        return pub_key
+        return rekey_str
 
 
 contract = SmartContract("http://127.0.0.1:8545", "")  # TODO fix args

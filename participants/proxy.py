@@ -6,6 +6,7 @@ import json
 
 from constants import CA_URL
 from util import receive_large_message, convert_hex_str_to_object, setup_pre, get_key_params, convert_object_to_hex_str
+from smart_contract import contract
 
 logging.basicConfig(level=logging.INFO)
 pre, group = setup_pre()
@@ -31,16 +32,21 @@ def main(args):
         print(f"Got encrypted message from client: {message_data}")  # TODO change to sender id
 
         data = json.loads(message_data)
-        rekey_hex_str = data.get('rekey_hex_str')
         sender_id = data.get('sender_id')
         encrypted_message_hex_str = data.get('encrypted_message_hex_str')
+
+        rekey_hex_str = json.loads(contract.getReKey(sender_id))
+        logging.info(f"{type(rekey_hex_str)} REKEY_HEX_STR_FROM_CONTRACT: {rekey_hex_str}")
+
+        logging.info(f"REKEY_ENCODED: {rekey_hex_str}")
+
         encrypted_message, rekey, _, _ = convert_hex_str_to_object(
             group,
             message_hex_str=encrypted_message_hex_str,
             rekey_hex_str=rekey_hex_str
         )
 
-        logging.info(f"REKEY_HEX: {rekey_hex_str}")
+        logging.info(f"REKEY: {rekey}")
 
         encrypted_message = pre.reEncrypt(params, sender_id, rekey, encrypted_message)
         encrypted_message_hex_str, _, _, _ = convert_object_to_hex_str(

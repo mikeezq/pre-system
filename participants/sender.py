@@ -5,6 +5,7 @@ import logging
 
 from util import get_key_params, setup_pre, convert_object_to_hex_str, send_large_message
 from constants import CA_URL
+from smart_contract import contract
 
 logging.basicConfig(level=logging.INFO)
 pre, group = setup_pre()
@@ -28,10 +29,12 @@ def main(host_ip, host_port):
     encrypted_message_hex_str, rekey_hex_str, _, _ = convert_object_to_hex_str(
         group,
         message=encrypted_message,
-        rekey=rekey
+        rekey=rekey,
     )
 
-    print(rekey_hex_str)
+    rekey = json.dumps(rekey_hex_str)
+    contract.addReKey(ID, rekey)
+
     print(encrypted_message_hex_str)
 
     message_data = json.dumps({
@@ -39,6 +42,8 @@ def main(host_ip, host_port):
         'encrypted_message_hex_str': encrypted_message_hex_str,
         'rekey_hex_str': rekey_hex_str,
     })
+
+    print(type(message_data))
 
     send_large_message(client_socket, message_data)
 
