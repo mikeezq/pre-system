@@ -2,3 +2,4 @@ venv
 .idea
 __pycache__
 temp/__pycache__
+.gitconfig
