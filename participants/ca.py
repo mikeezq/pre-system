@@ -22,7 +22,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
 
                 sender_id = data.get('sender_id')
-                logging.info("Got key request from: %s", sender_id)
+                if sender_id == "proxy":
+                    logging.info("Got public params request from proxy")
+                else:
+                    logging.info("Got key request from: %s", sender_id)
 
                 id_secret_key = pre.keyGen(master_secret_key, sender_id)
 

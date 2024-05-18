@@ -9,8 +9,8 @@ from smart_contract import contract
 
 logging.basicConfig(level=logging.INFO)
 pre, group = setup_pre()
-ID = "client-a"
-ID2 = "client-b"
+ID = "sender"
+ID2 = "reciever"
 
 
 def main(host_ip, host_port):
@@ -21,11 +21,9 @@ def main(host_ip, host_port):
     client_socket.connect((host_ip, host_port))
 
     message = "<confidential message>"
+    logging.info(f"Message to encrypt: {message}")
     encrypted_message = pre.encrypt(params, ID, message)
     rekey = pre.rkGen(params, id_secret_key, ID, ID2)
-    print(f"PARAMS: {params}")
-    print(f"MESSAGE: {encrypted_message}")
-    print(f"REKEY: {rekey}")
     encrypted_message_hex_str, rekey_hex_str, _, _ = convert_object_to_hex_str(
         group,
         message=encrypted_message,
@@ -35,20 +33,15 @@ def main(host_ip, host_port):
     rekey = json.dumps(rekey_hex_str)
     contract.addReKey(ID, rekey)
 
-    print(encrypted_message_hex_str)
-
     message_data = json.dumps({
         'sender_id': ID,
         'encrypted_message_hex_str': encrypted_message_hex_str,
-        'rekey_hex_str': rekey_hex_str,
     })
-
-    print(type(message_data))
 
     send_large_message(client_socket, message_data)
 
     response = client_socket.recv(1024)
-    logging.info("Get response from client: %s", response.decode('utf-8'))
+    logging.info("Got response from client: %s", response.decode('utf-8'))
 
     client_socket.close()
 
@@ -57,7 +50,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--host-ip", type=str, default="0.0.0.0")
     parser.add_argument("--host-port", type=int, default=1024)
-    parser.add_argument("--client-name", type=str, default="client-a")
+    parser.add_argument("--client-name", type=str, default="sender")
 
     return parser.parse_args()
 

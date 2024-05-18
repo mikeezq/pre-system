@@ -19,9 +19,9 @@ def main(args):
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((server_host, server_port))
     server_socket.listen(5)
-    _, params = get_key_params(CA_URL, "", group) # TODO: check it
+    _, params = get_key_params(CA_URL, "proxy", group) # TODO: check it
 
-    print(f"Server listen {server_host}:{server_port}")
+    logging.info(f"Server listen {server_host}:{server_port}")
 
     while True:
         client_socket, client_address = server_socket.accept()
@@ -29,16 +29,14 @@ def main(args):
         message_data = receive_large_message(client_socket)
         # if not data:
         #     break
-        print(f"Got encrypted message from client: {message_data}")  # TODO change to sender id
 
         data = json.loads(message_data)
         sender_id = data.get('sender_id')
         encrypted_message_hex_str = data.get('encrypted_message_hex_str')
 
-        rekey_hex_str = json.loads(contract.getReKey(sender_id))
-        logging.info(f"{type(rekey_hex_str)} REKEY_HEX_STR_FROM_CONTRACT: {rekey_hex_str}")
+        logging.info(f"Got encrypted message from client: {sender_id}")
 
-        logging.info(f"REKEY_ENCODED: {rekey_hex_str}")
+        rekey_hex_str = json.loads(contract.getReKey(sender_id, "receiver"))
 
         encrypted_message, rekey, _, _ = convert_hex_str_to_object(
             group,
@@ -46,15 +44,11 @@ def main(args):
             rekey_hex_str=rekey_hex_str
         )
 
-        logging.info(f"REKEY: {rekey}")
-
         encrypted_message = pre.reEncrypt(params, sender_id, rekey, encrypted_message)
         encrypted_message_hex_str, _, _, _ = convert_object_to_hex_str(
             group,
             message=encrypted_message
         )
-
-        logging.info(f"REENCRYPTED_MESSAGE {encrypted_message_hex_str}")
 
         data['encrypted_message_hex_str'] = encrypted_message_hex_str
         data = json.dumps(data)

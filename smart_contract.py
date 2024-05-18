@@ -46,7 +46,7 @@ class SmartContract:
         self.contract = self.web3.eth.contract(address=contract_address, abi=SmartContract.abi)
 
     def addReKey(self, clientName, reKey):
-        logging.info("Add rekey for %s", clientName)
+        logging.info("Add rekey for %s to smart-contract", clientName)
         tx_hash = self.contract.functions.addReKey(clientName, reKey).transact({
             'from': SENDER_ADDRESS,
             'gas': 2000000,
@@ -54,8 +54,8 @@ class SmartContract:
 
         self.web3.eth.wait_for_transaction_receipt(tx_hash)
 
-    def getReKey(self, clientName):
-        logging.info("Get rekey for client: %s", clientName)
+    def getReKey(self, clientName, to_client):
+        logging.info("Get rekey for client: %s", to_client)
         rekey_str = self.contract.functions.getReKey(clientName).call()
 
         return rekey_str

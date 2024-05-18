@@ -8,7 +8,7 @@ from constants import CA_URL
 
 logging.basicConfig(level=logging.INFO)
 pre, group = setup_pre()
-ID = "client-b"
+ID = "reciever"
 
 # REKEY: {'N': "<class 'integer.Element'>", 'R': "<class 'pairing.Element'>"}
 # {
@@ -41,10 +41,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 )
 
                 logging.info(f"PARAMS: {params}")
-                logging.info(f"MESSAGE: {encrypted_message}")
 
                 # TODO: add correct id params
-                decrypted_message = pre.decryptSecondLevel(params, id_secret_key, "client-a", ID, encrypted_message)
+                decrypted_message = pre.decryptSecondLevel(params, id_secret_key, "sender", ID, encrypted_message)
                 logging.info("Decrypted message: %s, from client: %s", decrypted_message, sender_id)
 
                 self.send_response(200)
